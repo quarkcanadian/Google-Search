@@ -1,0 +1,40 @@
+body{
+
+    background-color: #74b94b;
+    color: white;
+}
+#wrapper{
+
+
+  padding-left:60px;
+  padding-right:50px;
+
+}
+legend {
+
+font-size: 40px;
+    display: block;
+    padding: 10px;
+    color: #5E6063;
+    background-color: white;
+}
+
+label{
+  font-size: 23px;
+}
+.help-block{
+  color:white;
+  font-size: 17px;
+}
+
+.form-group{
+
+  padding-left:100px;
+    padding-right:100px;
+  padding-bottom: 5px;
+}
+
+.btn-default{
+  background-color:#00AF4C;
+  border-color: #00AF4C;
+}

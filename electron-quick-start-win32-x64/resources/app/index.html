@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+
+
+
+<html>
+
+
+
+<head>
+
+
+
+  <meta charset="UTF-8">
+
+  <title>SEO CRAWLER - PYB</title>
+
+
+
+  <link rel="stylesheet" href="./css/bootstrap/dist/css/bootstrap.min.css" media="screen" title="no title" charset="utf-8">
+
+
+
+  <link rel="stylesheet" href="./css/master.css" media="screen" title="no title" charset="utf-8">
+
+
+
+</head>
+
+
+
+<body>
+
+  <legend align="center">Protect Your Boundaries</legend>
+
+  <div id="wrapper">
+
+
+
+    <!-- Text input-->
+
+
+
+    <div class="form-group">
+
+
+
+      <label class="col-md-4 control-label" for="gdomian">Google Domain:</label>
+
+
+
+      <div class="col-md-5">
+
+
+
+        <input id="gdomian" name="gdomian" type="text" placeholder="www.google.ca" class="form-control input-md">
+
+
+
+        <span class="help-block">enter in a google domain </span>
+
+
+
+      </div>
+
+
+
+    </div>
+
+
+
+    <div class="form-group">
+
+
+
+      <label class="col-md-4 control-label" for="tdomian">Target Domain:</label>
+
+
+
+      <div class="col-md-5">
+
+
+
+        <input id="tdomian" name="tdomian" type="text" placeholder="protectyourboundaries" class="form-control input-md">
+
+
+
+        <span class="help-block">enter in the domain with or without the prefix or suffix</span>
+      </div>
+    </div>
+
+
+    <div class="form-group">
+      <label class="col-md-4 control-label" for="gs">Target Google Spreadsheet:</label>
+      <div class="col-md-5">
+        <input id="gs" name="gs" type="text" placeholder="https://docs.google.com/spreadsheets/d/11ppnUrVoPANqH5izGrd7s90kP9o6Ad_SOyaB77D78Xg/edit#gid=649046672" class="form-control input-md">
+        <span class="help-block">click on Spreadsheet and copy the url of the spreadsheet and paste</span>
+
+
+
+      </div>
+
+
+
+    </div>
+
+
+
+
+    <div class="form-group">
+
+      <label class="col-md-4 control-label" for="is">Target Internal Sheet:</label>
+
+      <div class="col-md-5">
+
+        <input id="is" name="is" type="text" placeholder="https://docs.google.com/spreadsheets/d/11ppnUrVoPANqH5izGrd7s90kP9o6Ad_SOyaB77D78Xg/edit#gid=649046672" class="form-control input-md">
+
+        <span class="help-block">Enter the name of the sheet within the spreadsheet document </span>
+
+      </div>
+
+    </div>
+
+
+<!--
+
+    <div class="form-group">
+
+      <label class="col-md-4 control-label" for="is">Specific Rows:</label>
+
+      <div class="col-md-5">
+
+        <input id="target_rows" name="target_rows" type="text" placeholder="" class="form-control input-md">
+
+        <span class="help-block">Enter the target rows with commas (1,23,54) or a range of rows to target with a dash (2-8) or just leave blank for everything</span>
+
+      </div>
+
+    </div>
+
+-->
+
+
+
+
+    <div class="col-md-12" align="center" style="padding-top:10px;">
+
+
+
+      <a class="btn btn-primary btn-default" id="serch"><span id="serch" class="glyphicon glyphicon-transfer"></span> Submit</a>
+
+
+
+    </div>
+
+
+
+</body>
+
+
+
+<script>
+  window.$ = window.jQuery = require('./js/jquery-2.1.1.min.js');
+
+  $(document).ready(function() {
+
+    var GoogleSpreadsheet = require('google-spreadsheet');
+    var async = require('async');
+    var asynch = require('asynch');
+    var request = require('then-request');
+    var cheerio = require("cheerio");
+    var doc = new GoogleSpreadsheet('11ppnUrVoPANqH5izGrd7s90kP9o6Ad_SOyaB77D78Xg');
+    var entries = new Array();
+    var search_results = new Array();
+    var pyb_results = new Array();
+    var sheet_index = 2;
+    var gdomain = '';
+    var tdomain = '';
+    var gs = '';
+    var is = 0;
+
+
+
+
+
+    function Entry(keyphrase, pyb_rank, cp_rank, author, crawl_date, stype, page_link, do_search) {
+      this.keyphrase = keyphrase;
+      this.page_link = page_link.toString().trim().toLowerCase().replace(/\s+/g, '');
+      this.cp_rank = 100;
+      this.pyb_rank = 100;
+
+      var ranks = getCpRank(this.page_link);
+      this.cp_rank = ranks[0];
+      this.pyb_rank = ranks[1];
+      this.author = author;
+      this.crawl_date = crawl_date;
+      this.stype = stype;
+      this.do_search = do_search;
+      entries.push(this);
+    }
+
+
+
+    function Result(ind, url) {
+
+      this.ind = ind;
+      this.url = url.toString().trim().toLowerCase().replace(/\s+/g, '');
+      search_results.push(this);
+
+    }
+
+
+    function getCpRank(page_link) {
+
+      var found = 0;
+      var rank = new Array();
+      var cprank = 100;
+      var pybrank = 100;
+      var pl = '';
+      var pr = '';
+
+
+
+      if (page_link.toString().indexOf("/") == -1) {
+        pl = page_link.toString().trim().toLowerCase();
+      } else {
+
+        pl = page_link.toString().split("/").pop().trim().toLowerCase();
+      }
+      console.log('-------> ' + pl);
+
+
+
+      for (var i = 0; i < search_results.length; i++) {
+
+
+        if (search_results[i].url.includes(tdomain)) {
+
+          console.log('found pyb: ' + pybrank);
+          var inds = i + 1;
+          pyb_results.push(inds);
+
+
+          if (found == 0) {
+
+            found = 1;
+            pybrank = i + 1;
+
+          }
+
+
+
+          if (page_link.toString().indexOf("/") == -1) {
+
+            pr = search_results[i].url.trim().toLowerCase()
+
+
+            if (pr.includes(pl)) {
+              cprank = i + 1;
+              console.log("FOUND(CP): " + cprank);
+            }
+
+          } else {
+
+            pr = search_results[i].url.toString().split("/").pop().trim().toLowerCase();
+            if (pl == pr) {
+              cprank = i + 1;
+
+              console.log("FOUND(CP): " + cprank);
+
+            }
+
+          }
+
+        } else {
+
+          pr = search_results[i].url.trim().toLowerCase()
+
+
+          if (pr.includes(pl)) {
+            cprank = i + 1;
+            console.log("FOUND(CP): " + cprank);
+          }
+
+        }
+
+      }
+
+      rank.push(cprank);
+      rank.push(pybrank);
+
+      console.log('-----------------------------------------------------\n');
+
+      return rank;
+
+    }
+
+
+    function getReltaivePybRank(page_link) {
+
+      var place = 0;
+
+      for (var i = 0; i < pyb_results.length; i++) {
+
+        var pl = page_link.split("/").pop().toString().toLowerCase();
+        var pr = pyb_results[i].url.split("/").pop().toString().toLowerCase();
+
+
+
+        if (pl == pr) {
+
+          place = i + 1;
+
+          return place;
+
+        }
+
+      }
+
+    }
+
+
+
+
+
+    var sheet;
+
+    var creds_json = ({
+
+      client_email: 'pyb-92@pyb-search.iam.gserviceaccount.com',
+      private_key: '-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC1rw1/mjcdEo/U\nevprv70qpSX9oJXjIADQkhhQNMzMazuL58btRTZA5pUpZEL/PxXXhO0fsgglSTIC\nmAMr2w396imQ2jHmipUW1tLd8ET8IJ3eA4u387KOdcCz8Y11/i/UP9QZ9/AD7LEz\ngXS63iZ5JNly6nifdZK98VB69l5FyDA0+bjBDLNvk+nOmjTVDXtVvuTa/MrXr6iz\n39fb/cizh0US0BchH1HEJhGQwCoXwUuxAEoMDT1tfFlmfn9Bzes4Jikr1taI3Pcw\n+sOdP3LjJPAFT9IfO5EYaS+5qBBPrfk9aAIsV43cT+hLYQlb9vbBvC3NkSUEn15b\niwM14lRHAgMBAAECggEATEIxtEGSqI1F+bW0rs1IJUI0dASXZUHllaX8to2y+Ip5\n7/tVL/pBD3S5XypKRMDB9jhBH3Cmop/aceREUIAdm1pSIA61q0K32WJKGAXlrr4y\nBSIP3yJW7BzYya615bTPdpNj/5JmF/+dUTUhPd5I38hrzSRFhQjgkwFa+oG2iCsM\n3t/jLLZP+1Vlu1dbJpmuzZ8/l8ilbTvfNipPJRRt1Dptml6NmnEo/FQl23t5JSxE\nQNNm3MAXWo4OT5gsMgT41V0ZOiz20zmDq3eKYNZfwYEFtiVwQDFFmreCWUIu42xf\nV6NK5m42tLhHp3eHcPzXw4L/E+7+mHNS9pI4deWCoQKBgQDskVglRoNLHoJtY0gE\nISHBc/egrRH10v7GcM3VugIS66TgVso1H9H70bB9KmfdNUxw47B0QI1NEXVDa2B/\nl+4y2Apgc6g10wEpQFqFU9JgWN1kniRO8Bphn9nwPjcCsVtCWl8I1Id4NmbZD93V\njEDeVzTNqIObtazHkSWVmiiGqwKBgQDEm5VY18Xa9Lxz9k+ivl+Ym9mIYrNt4tdC\nW/9PFWesngDTskS4RBihNApGfXygaaV+xTMspANhnLZo+n+bIlyyb1DX85Ld6EvK\nBaptCeAE9DdSTojaDaZTDwPKjLWVg5CYQAmCPhRiAfD8LOP2MsQMRv1uTObyeca+\nKFep6Z7Y1QKBgQCyaJayXfBMabDxcCtyuc3sSFobOgrOepab75y8L7C6ti485hdP\nYzUIlcZlTuLPyA9jH8QGmFw4IA9wjf1TnLAOdjG1NeRI214Hzzm1TVbeRIaLCFzX\nj2pF77j73t+7zyfE7cS4MxgLh/OehcHF+CU/yULQSuMePjAUvZk7ruwbSwKBgBuu\nOAGxJ2cja+D7vcyQ9w6aaq8cDl0bQelS4Ig24EjaWg10HN7An6Mam5O/GSvQk/9c\nLk9LrDozAS+YjRy/YsOwjnZJEdVyXjFMSOlfKY4pABzzd6sTnuY0x/jdhLdPNa1p\n3qzapq4BzfcDLvk7voRn/khoRV/AK24cafM/NCEdAoGBALIa7xWDtSCh2Y6by8SR\n3Olo+jau5B+TgoBtCuW3hC2OPlg0O3Qb/8n657vzCZSC/jjptHZPNdsQU5I1bZrF\nDscSM8oZlO35pazlbAClD8FhhshqtnwZrHlZr+lvv+RxOrVz1WOUE0E+7BUglgGN\nV4HkKIwX5Yz3tL8XfVwpXkjF\n-----END PRIVATE KEY-----\n'
+
+    });
+
+    console.log("ready!");
+
+    $('#gdomian').val('www.google.ca');
+    $('#tdomian').val('protectyourboundaries');
+    $('#gs').val('https://docs.google.com/spreadsheets/d/11ppnUrVoPANqH5izGrd7s90kP9o6Ad_SOyaB77D78Xg/edit#gid=649046672');
+    $('#is').val('Jamie2');
+
+
+
+    $('#serch').click(function(event) {
+
+      entries = new Array();
+      search_results = new Array();
+      pyb_results = new Array();
+
+      sheet_index = 2;
+
+      gdomain = '';
+      tdomain = '';
+      gs = '';
+      is = 0;
+
+      gdomain = $('#gdomian').val();
+
+      tdomain = $('#tdomian').val();
+
+      console.log(tdomain);
+
+      gs = extractCode($('#gs').val());
+
+      getSheetIdByName($('#is').val(), function(i) {
+        console.log('going in: ' + i);
+        var rows = null;
+
+
+        assignRank(function(rows){
+          console.log(rows);
+          requestRow(0,rows)
+
+
+        });
+
+      });
+
+    });
+
+
+
+
+    function assignRank(callback) {
+
+      async.series([
+
+        function setAuth(step) {
+
+          doc.useServiceAccountAuth(creds_json, step);
+
+        },
+
+
+        function getInfoAndWorksheets(step) {
+
+          doc.getInfo(function(creds_json, info) {
+            sheet = info.worksheets[is];
+            console.log('sheet: ' + sheet.title + ' ' + sheet.rowCount + 'x' + sheet.colCount);
+            step();
+
+          });
+
+        },
+
+
+
+        function workingWithRows(step) {
+
+          sheet.getRows({
+
+          }, function(err, rows) {
+
+            callback(rows);
+
+            step();
+
+          });
+
+        },
+
+
+      ]);
+
+    }
+
+
+function requestRow(i,row_arr){
+
+  if(i==row_arr.length){
+  //console.log('finished: '+start_park.length);
+
+  }
+  else{
+
+  makeRequest(row_arr[i], 1, 0, 0,function(ret){
+
+
+    setTimeout(function() {
+      i = i+1;
+      console.log('in requestRow');
+      requestRow(i,row_arr);
+        console.log('out requestRow');
+    }, 5000);
+
+
+
+  });
+
+  }
+
+}
+
+
+function makeRequest(sheetrow, result_index, start, finish,callback) {
+
+  var page = "https://" + gdomain + "/search?q=" + sheetrow.keyphrase.split(' ').join('+') + "&start=" + start * 10;
+
+  request('GET', page).done(function(res) {
+
+    var $ = cheerio.load(res.getBody());
+
+    $("cite").each(function(e) {
+
+      if ($(this).parent().text().trim().substr(0, 2).toLowerCase() != 'ad') {
+        var result = new Result(result_index, $(this).text());
+        result_index = result_index + 1;
+      }
+
+    });
+
+
+    if (start == finish) {
+      console.log('going into entry');
+      var entry = new Entry(sheetrow.keyphrase, sheetrow.pybrank, sheetrow.cprank, sheetrow.author, sheetrow.crawled, sheetrow.stype, sheetrow.pagelink, sheetrow.dosearch);
+      sheetrow.pybrank = entry.pyb_rank;
+      sheetrow.cprank = entry.cp_rank
+      sheetrow.crawled = getToday();
+      sheetrow.Positions = pyb_results;
+      sheetrow.overallrank = '=if(E' + sheet_index + '=0,D' + sheet_index + ',if(D' + sheet_index + '=0,E' + sheet_index + ',if(D' + sheet_index + '<E' + sheet_index + ',D' + sheet_index + ',E' + sheet_index + ')))';
+      sheetrow.save(function(err) {
+        sheet_index = sheet_index + 1;
+        console.log('New Array');
+        search_results = new Array();
+        pyb_results = new Array();
+        console.log('passed');
+        callback(0)
+
+      });
+    } else {
+
+      setTimeout(function() {
+        start = start + 1;
+        makeRequest(sheetrow, result_index, start, finish);
+      }, 10000);
+
+    }
+
+  });
+
+}
+
+
+    function extractCode(url) {
+
+      doc = new GoogleSpreadsheet(url.split('//')[1].split('/')[3]);
+      return url.split('//')[1].split('/')[3];
+    }
+
+
+
+
+
+    function getSheetIdByName(name, callback) {
+
+      async.series([
+        function setAuth(step) {
+          doc.useServiceAccountAuth(creds_json, step);
+
+        },
+
+
+
+        function getInfoAndWorksheets(step) {
+
+          doc.getInfo(function(creds_json, info) {
+
+            (function iterator(i) {
+
+              console.log('index');
+
+              if (name.toLowerCase() == info.worksheets[i].title.toLowerCase()) {
+
+                console.log('found but not marked:' + i);
+                is = i;
+                callback(i);
+                return i;
+
+              } else {
+
+                if (i == info.worksheets.length) {
+
+                  alert('No sheet found, using first sheet');
+
+                  return 0;
+
+                } else {
+
+                  iterator(i + 1);
+                }
+
+              }
+
+            })(0);
+
+          });
+
+        },
+
+        function workingWithRows(step) {
+
+          alert('no sheet found');
+
+        },
+
+      ]);
+
+
+
+    }
+
+
+    function getToday() {
+      var today = new Date();
+
+      var dd = today.getDate();
+      var mm = today.getMonth() + 1; //January is 0!
+      var yyyy = today.getFullYear();
+
+      if (dd < 10) {
+
+        dd = '0' + dd
+      }
+
+
+      if (mm < 10) {
+        mm = '0' + mm
+
+      }
+
+      today = yyyy + '-' + mm + '-' + dd;
+      return today;
+    }
+
+    require('./renderer.js');
+  });
+</script>
+
+
+<script type="text/javascript" src="./css/bootstrap/dist/js/bootstrap.min.js"></script>
+
+
+
+</html>

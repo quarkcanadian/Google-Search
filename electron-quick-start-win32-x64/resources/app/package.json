@@ -1,0 +1,42 @@
+{
+  "name": "electron-quick-start",
+  "version": "1.0.0",
+  "description": "A minimal Electron application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/electron/electron-quick-start.git"
+  },
+  "keywords": [
+    "Electron",
+    "quick",
+    "start",
+    "tutorial"
+  ],
+  "author": "GitHub",
+  "license": "CC0-1.0",
+  "bugs": {
+    "url": "https://github.com/electron/electron-quick-start/issues"
+  },
+  "homepage": "https://github.com/electron/electron-quick-start#readme",
+  "devDependencies": {
+    "electron-packager": "^7.3.0",
+    "electron-prebuilt": "^1.2.0"
+  },
+  "dependencies": {
+    "async": "^2.0.0-rc.6",
+    "asynch": "^0.5.2",
+    "cheerio": "^0.20.0",
+    "fibers": "^1.0.13",
+    "google-spreadsheet": "^2.0.3",
+    "menu": "^0.2.5",
+    "node-sync": "^0.1.0",
+    "request": "^2.73.0",
+    "sync": "^0.2.5",
+    "synch": "^1.0.0",
+    "then-request": "^2.2.0"
+  }
+}
